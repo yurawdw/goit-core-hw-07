@@ -152,7 +152,6 @@ class AddressBook(UserDict):
         """Shift the date if it falls on a weekend."""
         return timedelta(days = (0 if date.weekday() < 5 else 7 - date.weekday()))
     
-# работаю над включением этого метода в класс AddressBook            
     def get_upcoming_birthdays(self, days = 7):
         """Get contacts with birthdays in the next <days> days."""
         today = datetime.now()

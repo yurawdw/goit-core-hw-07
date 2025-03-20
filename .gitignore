@@ -164,3 +164,10 @@ old-files/handlers.py
 old-files/main_old.py
 old-files/main_old2.py
 old-files/main_v3.py
+old-files/menu.py
+old-files/main.py
+.gitignore
+old-files/contacts.db
+old-files/main_v0.0.16.py
+.gitignore
+old-files/test_command.txt

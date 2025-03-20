@@ -1,10 +1,13 @@
 # Address Book Assistant - v0.0.17
 
-Author: Yury Vdovychenko
+*Author: Yury Vdovychenko*
 
-Date: 2025-03-20
+**Date: 2025-03-20**
 
-Description:
+---
+
+## Description:
+
 This program allows users to manage a simple address book with contacts and their phone numbers.
 It provides the following commands:
 - hello: Greet the bot

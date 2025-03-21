@@ -61,44 +61,54 @@ HELP = f"""
 # Base class
 class Field:
     """Base class for fields like Name, Phone, and Birthday."""
+
     def __init__(self, value) -> None:
         self.value = value
 
     def __str__(self):
         return str(self.value)
 
+
 # Class for user name
 class Name(Field):
     """Class for storing and validating a contact's name."""
+
     def __init__(self, value: str) -> None:
         if not value:
-            raise ValueError(f"\n{Fore.RED}Name is required{Style.RESET_ALL}\n")
+            raise ValueError(
+                f"\n{Fore.RED}Name is required{Style.RESET_ALL}\n")
         super().__init__(value)
+
 
 # Class for user's birthday
 class Birthday(Field):
     """Class for storing and validating a contact's birthday."""
+
     def __init__(self, value: str):
         try:
             datetime.strptime(value.strip(), '%d.%m.%Y')
         except ValueError:
-            raise ValueError(f"{Fore.RED}Invalid date format. Use 'DD.MM.YYYY'{Style.RESET_ALL}")
+            raise ValueError(
+                f"{Fore.RED}Invalid date format. Use 'DD.MM.YYYY'{Style.RESET_ALL}")
         else:
             super().__init__(value.strip())
-        
+
 
 # Class for user's phone number
 class Phone(Field):
     """Class for storing and validating a contact's phone number."""
+
     def __init__(self, value: str) -> None:
         if not bool(re.match(r'^\d{10}$', value)):
-            raise ValueError(f"{Fore.RED}Invalid phone number '{value}'. It should be 10 digits.{Style.RESET_ALL}")
+            raise ValueError(
+                f"{Fore.RED}Invalid phone number '{value}'. It should be 10 digits.{Style.RESET_ALL}")
         super().__init__(value)
 
 
 # Record class
 class Record:
     """Class for storing a contact's details."""
+
     def __init__(self, name: str) -> None:
         self.name = Name(name)
         self.phones = []
@@ -122,7 +132,8 @@ class Record:
             self.add_phone(new_phone)
             self.remove_phone(old_phone)
         else:
-            raise ValueError(f"\n{Fore.RED}Error: phone number '{old_phone}' not found.{Style.RESET_ALL}\n")
+            raise ValueError(
+                f"\n{Fore.RED}Error: phone number '{old_phone}' not found.{Style.RESET_ALL}\n")
 
     def find_phone(self, phone_number: str) -> str | None:
         """Find a phone number in the contact."""
@@ -130,11 +141,13 @@ class Record:
 
     def __str__(self):
         phone_numbers = "; ".join([str(phone) for phone in self.phones])
-        return f"{Fore.WHITE}Contact name: {Fore.GREEN}{self.name}, {Fore.WHITE}phones: {Fore.YELLOW}{phone_numbers}{Style.RESET_ALL}"
+        return f"{Fore.WHITE}Contact name: {Fore.GREEN}{str(self.name):15} {Fore.WHITE}birthday: " + f"{Fore.YELLOW if self.birthday else Fore.RED + Style.DIM}{str(self.birthday):15} {Style.RESET_ALL}{Fore.WHITE}phones: {Fore.YELLOW}{phone_numbers}{Style.RESET_ALL}"
+
 
 # AddressBook class
 class AddressBook(UserDict):
     """Class for storing and managing multiple contacts."""
+
     def add_record(self, record: Record) -> None:
         """Add a new contact to the address book."""
         self.data[record.name.value] = record
@@ -147,23 +160,25 @@ class AddressBook(UserDict):
         """Delete a contact by name."""
         if name in self.data:
             del self.data[name]
-            
+
     def shift_if_weekend(self, date: datetime) -> timedelta:
         """Shift the date if it falls on a weekend."""
-        return timedelta(days = (0 if date.weekday() < 5 else 7 - date.weekday()))
-    
-    def get_upcoming_birthdays(self, days = 7):
+        return timedelta(days=(0 if date.weekday() < 5 else 7 - date.weekday()))
+
+    def get_upcoming_birthdays(self, days=7):
         """Get contacts with birthdays in the next <days> days."""
         today = datetime.now()
         upcoming_birthdays = []
         for record in self.data.values():
             if record.birthday:
-                birthday = datetime.strptime(record.birthday.value, '%d.%m.%Y').replace(year=today.year)
+                birthday = datetime.strptime(
+                    record.birthday.value, '%d.%m.%Y').replace(year=today.year)
                 if (birthday - today).days < 0:
                     birthday = birthday.replace(year=today.year + 1)
                 birthday += self.shift_if_weekend(birthday)
                 if 0 <= (birthday - today).days <= days:
-                    upcoming_birthdays.append({"name" : str(record.name.value), "birthday" : birthday.strftime('%d.%m.%Y')})
+                    upcoming_birthdays.append(
+                        {"name": str(record.name.value), "birthday": birthday.strftime('%d.%m.%Y')})
         return upcoming_birthdays
 
     def __str__(self):
@@ -201,8 +216,10 @@ def parse_input(user_input):
 def add_contact(args, book):
     """Add a new contact to the address book."""
     if len(args) < 2:
-        raise ValueError(f"{Fore.RED}Error: Provide a name and phone number.{Style.RESET_ALL}")
-    name, phone = args[0], args[1]
+        raise ValueError(
+            f"{Fore.RED}Error: Provide a name and phone number.{Style.RESET_ALL}")
+    *name_parts, phone = args
+    name = " ".join(name_parts).strip()
     record = book.find(name)
     if record:
         record.add_phone(phone)
@@ -218,24 +235,30 @@ def change_contact(args, book):
     """Change an existing phone number for a contact."""
     if len(args) < 3:
         return f"\n{Fore.RED}Error: Provide a name, old phone, and new phone.{Style.RESET_ALL}\n"
-    name, old_phone, new_phone = args[0], args[1], args[2]
+    *name_parts, old_phone, new_phone = args
+    name = " ".join(name_parts).strip()
+
     record = book.find(name)
     if record:
         record.edit_phone(old_phone, new_phone)
         return f"\n{Fore.GREEN}Phone number updated successfully!{Style.RESET_ALL}\n"
-    raise ValueError(f"\n{Fore.RED}Error: Contact '{name}' not found.{Style.RESET_ALL}\n")
+    raise ValueError(
+        f"\n{Fore.RED}Error: Contact '{name}' not found.{Style.RESET_ALL}\n")
 
 
 @input_error
 def show_contact(args, book):
     """Show contact details by name."""
     if len(args) < 1:
-        raise ValueError(f"{Fore.RED}Error: Provide a name to search for.{Style.RESET_ALL}")
-    name = args[0]
+        raise ValueError(
+            f"{Fore.RED}Error: Provide a name to search for.{Style.RESET_ALL}")
+
+    name = " ".join(args).strip()
     record = book.find(name)
     if record:
         return f"\n{Fore.GREEN}{record}{Style.RESET_ALL}\n"
-    raise ValueError(f"\n{Fore.RED}Error: Contact '{name}' not found.{Style.RESET_ALL}\n")
+    raise ValueError(
+        f"\n{Fore.RED}Error: Contact '{name}' not found.{Style.RESET_ALL}\n")
 
 
 @input_error
@@ -250,39 +273,47 @@ def show_all_contacts(book):
 def add_birthday(args, book):
     """Add a birthday to a contact."""
     if len(args) < 2:
-        raise ValueError(f"{Fore.RED}Error: Provide a name and birthday (DD.MM.YYYY).{Style.RESET_ALL}")
-    name, birthday = args[0], args[1]
+        raise ValueError(
+            f"{Fore.RED}Error: Provide a name and birthday (DD.MM.YYYY).{Style.RESET_ALL}")
+
+    *name_parts, birthday = args
+    name = " ".join(name_parts).strip()
     record = book.find(name)
     if record:
         record.add_birthday(birthday)
         return f"\n{Fore.GREEN}Birthday added successfully!{Style.RESET_ALL}\n"
-    raise ValueError(f"\n{Fore.RED}Error: Contact '{name}' not found.{Style.RESET_ALL}\n")
+    raise ValueError(
+        f"\n{Fore.RED}Error: Contact '{name}' not found.{Style.RESET_ALL}\n")
 
 
 @input_error
 def show_birthday(args, book):
     """Show the birthday of a contact."""
     if len(args) < 1:
-        raise ValueError(f"{Fore.RED}Error: Provide a name to search for.{Style.RESET_ALL}")
-    name = args[0]
+        raise ValueError(
+            f"{Fore.RED}Error: Provide a name to search for.{Style.RESET_ALL}")
+
+    name = " ".join(args).strip()
     record = book.find(name)
     if record and record.birthday:
         return f"\n{Fore.WHITE}Birthday: {Fore.GREEN}{record.birthday.value}{Style.RESET_ALL}\n"
-    raise ValueError(f"{Fore.RED}Error: Birthday for '{name}' not found.{Style.RESET_ALL}")
+    raise ValueError(
+        f"{Fore.RED}Error: Birthday for '{name}' not found.{Style.RESET_ALL}")
+
 
 @input_error
 def shift_if_weekend(date):
     """Shift the date if it falls on a weekend."""
-    return timedelta(days = (0 if date.weekday() < 5 else 7 - date.weekday()))
-    
-    
+    return timedelta(days=(0 if date.weekday() < 5 else 7 - date.weekday()))
+
+
 @input_error
 def get_upcoming_birthdays(args, book):
     """Show contacts with birthdays in the next <days> days."""
     if len(args) < 1:
-        args = [7] # Default to 7 days
+        args = [7]  # Default to 7 days
     message = ""
-    
+
     try:
         days = int(args[0])
     except ValueError or TypeError:
@@ -297,7 +328,6 @@ def get_upcoming_birthdays(args, book):
                 message += f"\n{Fore.WHITE}Contact: {Fore.GREEN}{record['name']}, {Fore.WHITE}Birthday: {Fore.YELLOW}{record['birthday']}{Style.RESET_ALL}"
             message += "\n"
     return message
-
 
 
 # Main function

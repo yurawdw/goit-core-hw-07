@@ -1,4 +1,4 @@
-# Address Book Assistant - v0.0.17
+# Address Book Assistant - v0.0.17.2
 
 *Author: Yury Vdovychenko*
 
